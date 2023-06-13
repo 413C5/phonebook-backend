@@ -170,7 +170,7 @@ app.put('/api/persons/:id', (request, response) => {
     if (findPerson!==undefined) {
         const updatedPerson = {
             id:id,
-            name: body.name,
+            name: findPerson.name,
             number: body.number
         }
 
