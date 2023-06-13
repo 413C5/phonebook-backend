@@ -1,17 +1,8 @@
-The solutions of part 2 exercises are in this folder, with one app per folder.
+The solutions of part3 exercises are in this folder.
 
-Project List:
-
-Project: courseinfo
-Folder: courseinfo
-Exercises: 2.1-2.5
+Render Web service
+https://fsopen2023-phonebook-backend.onrender.com
 
 
-Project: phonebook
-Folder: phonebook
-Exercises: 2.6-2.17
-
-
-Project: countries
-Folder: countries
-Exercises: 2.18-2.20
+Link to Part3 Github repository (Created separate repo in order to use Render)
+https://github.com/413C5/phonebook-backend
