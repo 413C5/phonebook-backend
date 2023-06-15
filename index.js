@@ -20,11 +20,6 @@ app.use(cors())
 app.use(express.json())
 app.use(express.static('build'))
 
-
-const generateRandomId = () => {
-    return Math.floor(Math.random() * (1000 - 1) + 1)
-}
-
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
 })
@@ -51,9 +46,10 @@ app.get('/info', (request, response) => {
         })
 })
 
+//Search by id
 app.get('/api/persons/:id', (request, response) => {
     Person.findById(request.params.id)
-        .then(person=>{
+        .then(person => {
             response.json(person)
         })
 })
@@ -79,14 +75,9 @@ app.delete('/api/persons/:id', (request, response) => {
     //console.log('length', persons.length)
 })
 
+//Add new person to phonebook
 app.post('/api/persons', (request, response) => {
     const body = request.body
-
-    const findPerson = persons.find(x => x.name === body.name)
-
-    //console.log('array:', persons)
-    //console.log('length', persons.length)
-
 
     //Name or number is missing
     if (!body.name && !body.number) {
@@ -108,24 +99,16 @@ app.post('/api/persons', (request, response) => {
     }
 
     else {
-        //Undefined means there is no name duplicate
-        if (findPerson !== undefined) {
-            return response.status(400).json({
-                error: 'name must be unique'
-            })
-        }
 
-        const newPerson = {
-            id: generateRandomId(),
+        const newPerson = Person({
             name: body.name,
             number: body.number
-        }
+        })
 
-        persons = persons.concat(newPerson)
-        response.json(newPerson)
-
-        //console.log('array:', persons)
-        //console.log('length', persons.length)
+        newPerson.save({})
+            .then(savedPerson => {
+                response.json(savedPerson)
+            })
     }
 })
 
