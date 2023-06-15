@@ -52,18 +52,10 @@ app.get('/info', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    //Converts string id into number
-    const id = Number(request.params.id)
-    const person = persons.find(person => person.id === id)
-
-    console.log(person)
-
-    if (person) {
-        response.json(person)
-    }
-    else {
-        response.status(404).end()
-    }
+    Person.findById(request.params.id)
+        .then(person=>{
+            response.json(person)
+        })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
