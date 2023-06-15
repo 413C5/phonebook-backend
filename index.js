@@ -1,48 +1,25 @@
-require('dotenv').config()
+//Imports
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
+require('dotenv').config()
 //app.use(morgan('tiny'))
 
+//Models used
+const Person = require('./models/person')
+
+//Middleware
 morgan.token('object', function (request, require) {
     return `${JSON.stringify(request.body)}`
 })
 
+//Middleware configuration
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :object'))
-
 app.use(cors())
 app.use(express.json())
 app.use(express.static('build'))
 
-
-let persons = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "number": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "number": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
-    },
-    {
-        "id": 5,
-        "name": "a",
-        "number": "1"
-    }
-]
 
 const generateRandomId = () => {
     return Math.floor(Math.random() * (1000 - 1) + 1)
@@ -52,24 +29,26 @@ app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
 })
 
+//Get all persons
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person.find({})
+        .then(persons => {
+            response.json(persons)
+        })
 })
 
+//Get number of people in phonebook + date of query
 app.get('/info', (request, response) => {
-    let size = (persons.length).toString()
-    //console.log(size)
-
     const date = new Date()
     const today = date.toDateString()
     const time = date.toTimeString()
 
-    //console.log('Date:', today)
-    //console.log('Time:', time)
-
-    response.send(
-        `Phonebook has info for ${size} people` +
-        `</br> </br>${today} ${time}`)
+    Person.countDocuments({})
+        .then(count => {
+            response.send(
+                `Phonebook has info for ${count} people` +
+                `</br> </br>${today} ${time}`)
+        })
 })
 
 app.get('/api/persons/:id', (request, response) => {
@@ -167,14 +146,14 @@ app.put('/api/persons/:id', (request, response) => {
     console.log('Find person', findPerson)
     console.log('---------------before update')
 
-    if (findPerson!==undefined) {
+    if (findPerson !== undefined) {
         const updatedPerson = {
-            id:id,
+            id: id,
             name: findPerson.name,
             number: body.number
         }
 
-        persons=persons.map(x => {
+        persons = persons.map(x => {
             if (x.id === id)
                 return (
                     x = updatedPerson
@@ -187,7 +166,7 @@ app.put('/api/persons/:id', (request, response) => {
         console.log('body', body)
         console.log('updatedPerson', updatedPerson)
         response.json(updatedPerson)
-        console.log('persons',persons)
+        console.log('persons', persons)
     }
     else {
         response.status(400).json({
@@ -196,7 +175,7 @@ app.put('/api/persons/:id', (request, response) => {
     }
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
