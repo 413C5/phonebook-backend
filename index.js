@@ -106,7 +106,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 })
 
 //Add new person to phonebook
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
     const findPerson = Person.findOne({ name: body.name })
 
@@ -146,6 +146,9 @@ app.post('/api/persons', (request, response) => {
                     .then(savedPerson => {
                         response.json(savedPerson)
                     })
+                    .catch(error => {
+                        next(error)
+                    })
             })
             .catch(error => {
                 next(error)
@@ -160,7 +163,7 @@ app.put('/api/persons/:id', (request, response, next) => {
         number: body.number
     }
 
-    Person.findByIdAndUpdate(request.params.id, personUpdate, { new: true })
+    Person.findByIdAndUpdate(request.params.id, personUpdate, { new: true, runValidators: true, context: 'query' })
         .then(updatedPerson => {
             if (updatedPerson) {
                 response.json(updatedPerson);
