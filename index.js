@@ -20,12 +20,20 @@ const errorHandler = (error, request, response, next) => {
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
     }
-
+    else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
     next(error)
 }
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
+}
+
+const catchAllErrorHandler = (error, request, response, next) => {
+    console.error('Unhandled error:', error)
+    console.log(error.name)
+    response.status(500).json({ error: 'Internal server error' });
 }
 
 //Middleware configuration
@@ -70,7 +78,10 @@ app.get('/info', (request, response, next) => {
 app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id)
         .then(person => {
-            response.json(person)
+            if (person !== null)
+                response.json(person)
+            else
+                response.status(404).end()
         })
         //CastError
         .catch(error => {
@@ -95,6 +106,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 //Add new person to phonebook
 app.post('/api/persons', (request, response) => {
     const body = request.body
+    const findPerson = Person.findOne({ name: body.name })
 
     //Name or number is missing
     if (!body.name && !body.number) {
@@ -116,60 +128,54 @@ app.post('/api/persons', (request, response) => {
     }
 
     else {
+        findPerson
+            .then(result => {
+                if (result !== null) {
+                    return response.status(400).json({
+                        error: 'name must be unique'
+                    })
+                }
+                const newPerson = Person({
+                    name: body.name,
+                    number: body.number
+                })
 
-        const newPerson = Person({
-            name: body.name,
-            number: body.number
-        })
-
-        newPerson.save({})
-            .then(savedPerson => {
-                response.json(savedPerson)
+                newPerson.save({})
+                    .then(savedPerson => {
+                        response.json(savedPerson)
+                    })
+            })
+            .catch(error => {
+                next(error)
             })
     }
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-    const id = Number(request.params.id)
     const body = request.body
-
-    const findPerson = persons.find(person => person.id === id)
-
-    console.log('Find person', findPerson)
-    console.log('---------------before update')
-
-    if (findPerson !== undefined) {
-        const updatedPerson = {
-            id: id,
-            name: findPerson.name,
-            number: body.number
-        }
-
-        persons = persons.map(x => {
-            if (x.id === id)
-                return (
-                    x = updatedPerson
-                )
-            else
-                return x
-        })
-        console.log('---------------after update')
-        console.log('id', id)
-        console.log('body', body)
-        console.log('updatedPerson', updatedPerson)
-        response.json(updatedPerson)
-        console.log('persons', persons)
+    const personUpdate = {
+        name: body.name,
+        number: body.number
     }
-    else {
-        response.status(400).json({
-            error: 'person with id not found'
+
+    Person.findByIdAndUpdate(request.params.id, personUpdate, { new: true })
+        .then(updatedPerson => {
+            if (updatedPerson) {
+                response.json(updatedPerson);
+            }
+            else {
+                response.status(404).send();
+            }
         })
-    }
+        .catch(error => {
+            next(error)
+        })
 })
 
 //Error handler middleware
 app.use(errorHandler)
 app.use(unknownEndpoint)
+app.use(catchAllErrorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
