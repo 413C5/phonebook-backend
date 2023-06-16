@@ -58,6 +58,7 @@ app.get('/api/persons', (request, response, next) => {
 })
 
 //Get number of people in phonebook + date of query
+//It works
 app.get('/info', (request, response, next) => {
     const date = new Date()
     const today = date.toDateString()
@@ -75,6 +76,7 @@ app.get('/info', (request, response, next) => {
 })
 
 //Search by id
+//It works
 app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id)
         .then(person => {
